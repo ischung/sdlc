@@ -48,29 +48,54 @@ sdlc/
 
 ## 🚀 설치
 
-세 가지 방법 중 선택하세요. **`/plugin` 명령**이 가장 간편합니다.
+두 가지 방법 중 선택하세요. **`/plugin` 명령**(방법 1)이 가장 간편하고 권장 방식입니다.
 
-### 방법 1 — Claude Code 플러그인 마켓플레이스 (권장)
+### 방법 1 — Claude Code `/plugin` 명령 (권장)
+
+#### ① 사용자 전역 설치 (모든 프로젝트에서 사용)
 
 ```text
 /plugin marketplace add ischung/sdlc
 /plugin install sdlc-skill-pack@sdlc-marketplace
 ```
 
-로컬 경로로 등록할 수도 있습니다:
+#### ② 프로젝트 레벨 설치 (현재 프로젝트에만 적용)
+
+`--scope project` 플래그로 지정합니다. `.claude/settings.json`에 기록되어 **git 커밋하면 팀원과 자동 공유**됩니다.
 
 ```text
-/plugin marketplace add /절대/경로/to/sdlc
-/plugin install sdlc-skill-pack@sdlc-marketplace
+/plugin marketplace add ischung/sdlc --scope project
+/plugin install sdlc-skill-pack@sdlc-marketplace --scope project
 ```
 
-### 방법 2 — 단일 플러그인 직접 설치
+개인 전용(팀과 공유 X)으로는 `--scope local`을 씁니다.
 
 ```text
-/plugin install /절대/경로/to/sdlc
+/plugin install sdlc-skill-pack@sdlc-marketplace --scope local
 ```
 
-### 방법 3 — bash 스크립트
+#### ③ 대화형 UI (가장 쉬움)
+
+```text
+/plugin
+```
+
+→ **Discover** 탭 → 플러그인 선택 → `Enter` → scope(User / Project / Local) 선택
+
+#### scope 비교
+
+| scope | 적용 범위 | 기록 위치 | 팀 공유 |
+|-------|----------|----------|:-------:|
+| `user` (기본) | 모든 프로젝트 | `~/.claude/settings.json` | — |
+| `project` | 현재 프로젝트만 | `.claude/settings.json` | ✅ (git 커밋 시) |
+| `local` | 현재 프로젝트만 | `.claude/settings.local.json` | ❌ |
+
+> 로컬 경로를 마켓플레이스로 등록할 수도 있습니다: `/plugin marketplace add /절대/경로/to/sdlc`
+> 단일 플러그인 직접 설치: `/plugin install /절대/경로/to/sdlc`
+
+### 방법 2 — bash 스크립트
+
+Claude Code가 없거나 셸에서 직접 설치·제거하고 싶을 때 사용합니다.
 
 ```bash
 git clone https://github.com/ischung/sdlc.git sdlc-skill-pack
@@ -84,7 +109,7 @@ chmod +x install.sh uninstall.sh
 ./install.sh --global --all --yes  # 확인 없이 자동 설치
 ```
 
-#### 설치 위치 비교
+bash 스크립트의 설치 위치:
 
 | 범위 | 경로 | 적용 대상 |
 |------|------|-----------|
@@ -92,19 +117,26 @@ chmod +x install.sh uninstall.sh
 | 전역 | `~/.claude/skills/<skill-name>/` | 모든 프로젝트 |
 
 > 설치 후 Claude Code를 재시작하거나 새 세션을 열면 스킬이 활성화됩니다.
+> 공식 플러그인 문서: https://code.claude.com/docs/en/plugins
 
 ---
 
 ## 🗑 제거
 
+설치할 때 사용한 scope와 같은 scope로 제거합니다.
+
 ```text
-/plugin uninstall sdlc-skill-pack
+/plugin uninstall sdlc-skill-pack                   # user scope
+/plugin uninstall sdlc-skill-pack --scope project   # project scope
+/plugin uninstall sdlc-skill-pack --scope local     # local scope
 ```
+
+bash 스크립트로 설치한 경우:
 
 ```bash
 ./uninstall.sh                    # 대화형
 ./uninstall.sh --all              # 프로젝트 레벨 전체
-./uninstall.sh --global --all
+./uninstall.sh --global --all     # 전역 전체
 ./uninstall.sh --skill write-prd
 ./uninstall.sh --global --all --yes
 ```
