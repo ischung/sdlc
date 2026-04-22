@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Claude Code 로컬 설정 및 설치 산출물
+.claude/
+
+# 편집기
+.vscode/
+.idea/
+*.swp
+*~
+
+# 로그
+*.log

@@ -1,0 +1,17 @@
+{
+  "name": "sdlc-marketplace",
+  "owner": {
+    "name": "Insang Cho",
+    "email": "insang@hansung.ac.kr"
+  },
+  "plugins": [
+    {
+      "name": "sdlc-skill-pack",
+      "source": "./",
+      "description": "소프트웨어 개발 생명주기(SDLC) 전 단계를 자동화하는 Claude Code 스킬 모음",
+      "version": "1.0.0",
+      "category": "development",
+      "tags": ["sdlc", "prd", "techspec", "kanban", "ci-cd", "github-flow", "education"]
+    }
+  ]
+}

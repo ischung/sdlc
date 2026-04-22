@@ -1,0 +1,22 @@
+{
+  "name": "sdlc-skill-pack",
+  "version": "1.0.0",
+  "description": "소프트웨어 개발 생명주기(SDLC) 전 단계를 자동화하는 Claude Code 스킬 모음 — PRD → TechSpec → 이슈 생성 → GitHub 등록 → 칸반 보드 → CI/CD → 구현까지.",
+  "author": {
+    "name": "Insang Cho",
+    "email": "insang@hansung.ac.kr"
+  },
+  "homepage": "https://github.com/insang/sdlc-skill-pack",
+  "license": "MIT",
+  "keywords": [
+    "sdlc",
+    "prd",
+    "techspec",
+    "github-issues",
+    "kanban",
+    "ci-cd",
+    "github-flow",
+    "education",
+    "software-engineering"
+  ]
+}
