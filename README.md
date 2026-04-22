@@ -1,17 +1,19 @@
 # SDLC Skill Pack for Claude Code
 
 소프트웨어 개발 생명주기(SDLC) 전 단계를 자동화하는 **Claude Code 플러그인**입니다.
-PRD 작성 → TechSpec → 이슈 생성 → GitHub 등록 → 칸반 보드 → CI/CD → 구현까지 한 번에.
+아이디어에서 출발해 PRD → TechSpec → 이슈 → GitHub 등록 → 칸반 → CI/CD → PR까지 한 번에.
+
+> 8개의 스킬이 **서로 바통을 넘기도록** 설계되어 있어, 각 단계 산출물이 다음 스킬의 입력이 됩니다.
 
 ---
 
-## 📦 패키지 구조
+## 📦 저장소 구조
 
 ```
 sdlc/
 ├── .claude-plugin/
-│   ├── plugin.json          # 공식 플러그인 매니페스트
-│   └── marketplace.json     # 마켓플레이스 배포용 정의
+│   ├── plugin.json          # Claude Code 공식 플러그인 매니페스트
+│   └── marketplace.json     # /plugin marketplace add 용 정의
 ├── skills/                  # Claude Code가 자동 로드하는 스킬 루트
 │   ├── write-prd/
 │   ├── write-techspec/
@@ -21,78 +23,65 @@ sdlc/
 │   ├── github-kanban-skill/
 │   ├── ci-cd-pipeline/
 │   └── implement-top-issue/
-├── install.sh               # 대체 설치 스크립트 (bash)
-├── uninstall.sh             # 대체 제거 스크립트 (bash)
+├── references/              # PRD/TechSpec 템플릿, 이슈 분할 전략 비교 자료
+├── install.sh               # bash 설치 스크립트 (대체 경로)
+├── uninstall.sh
 └── README.md
 ```
 
 ---
 
-## 🛠 포함된 스킬
+## 🛠 포함된 스킬 요약
 
-| 스킬 | 역할 |
-|------|------|
-| `write-prd` | 시니어 PM 코치 역할로 PRD 단계별 작성 |
-| `write-techspec` | PRD → TechSpec (아키텍처, API 명세, 데이터 모델) |
-| `generate-issues-vertical` | Vertical Slice 전략으로 이슈 분할 |
-| `generate-issues-layered` | 계층별(Layer) 전략으로 이슈 분할 |
-| `register-issues-to-github` | 로컬 마크다운 → GitHub 이슈 일괄 등록 |
-| `github-kanban-skill` | GitHub Projects 칸반 보드 자동 생성·관리 |
-| `ci-cd-pipeline` | GitHub Actions CI/CD 파이프라인 구현 |
-| `implement-top-issue` | 최우선 이슈 자동 구현 → PR 생성 |
+| # | 스킬 | SDLC 단계 | 주요 산출물 |
+|---|------|----------|-------------|
+| 1 | `write-prd` | 기획 | `prd.md` |
+| 2 | `write-techspec` | 설계 | `techspec.md` |
+| 3 | `generate-issues-vertical` | 백로그 분할 (수직) | `issues-vertical.md` |
+| 4 | `generate-issues-layered` | 백로그 분할 (계층) | `issues-layered.md` |
+| 5 | `register-issues-to-github` | 이슈 등록 | GitHub Issues, 레이블 |
+| 6 | `github-kanban-skill` | 프로젝트 관리 | GitHub Projects 보드 |
+| 7 | `ci-cd-pipeline` | DevOps | `.github/workflows/*`, Dockerfile, PR |
+| 8 | `implement-top-issue` | 구현 | 브랜치 · 코드 · 테스트 · PR |
 
 ---
 
-## 🚀 설치 방법
+## 🚀 설치
 
-세 가지 방법 중 선택하면 됩니다. **방법 1(공식 `/plugin` 명령)** 을 권장합니다.
+세 가지 방법 중 선택하세요. **`/plugin` 명령**이 가장 간편합니다.
 
 ### 방법 1 — Claude Code 플러그인 마켓플레이스 (권장)
 
-Claude Code 세션 안에서 슬래시 커맨드로 설치합니다.
+```text
+/plugin marketplace add ischung/sdlc
+/plugin install sdlc-skill-pack@sdlc-marketplace
+```
+
+로컬 경로로 등록할 수도 있습니다:
 
 ```text
-# 1) 로컬 경로를 마켓플레이스로 등록
 /plugin marketplace add /절대/경로/to/sdlc
-
-# 2) 플러그인 설치
 /plugin install sdlc-skill-pack@sdlc-marketplace
 ```
 
-원격(GitHub) 저장소라면:
-
-```text
-/plugin marketplace add <owner>/<repo>
-/plugin install sdlc-skill-pack@sdlc-marketplace
-```
-
-### 방법 2 — Claude Code 단일 플러그인 설치
+### 방법 2 — 단일 플러그인 직접 설치
 
 ```text
 /plugin install /절대/경로/to/sdlc
 ```
 
-### 방법 3 — bash 스크립트 (셸에서 직접)
+### 방법 3 — bash 스크립트
 
 ```bash
-git clone <repo-url> sdlc-skill-pack
+git clone https://github.com/ischung/sdlc.git sdlc-skill-pack
 cd sdlc-skill-pack
 chmod +x install.sh uninstall.sh
 
-# 대화형 설치
-./install.sh
-
-# 모든 스킬 — 프로젝트 레벨
-./install.sh --all
-
-# 모든 스킬 — 전역 (~/.claude/skills/)
-./install.sh --global --all
-
-# 특정 스킬만
-./install.sh --skill write-prd
-
-# 확인 없이 자동 설치
-./install.sh --global --all --yes
+./install.sh                       # 대화형 선택
+./install.sh --all                 # 프로젝트 레벨 전체
+./install.sh --global --all        # 전역(~/.claude/skills/) 전체
+./install.sh --skill write-prd     # 개별 설치
+./install.sh --global --all --yes  # 확인 없이 자동 설치
 ```
 
 #### 설치 위치 비교
@@ -106,19 +95,15 @@ chmod +x install.sh uninstall.sh
 
 ---
 
-## 🗑 제거 방법
-
-### 방법 1 — `/plugin`
+## 🗑 제거
 
 ```text
 /plugin uninstall sdlc-skill-pack
 ```
 
-### 방법 2 — bash 스크립트
-
 ```bash
-./uninstall.sh              # 대화형
-./uninstall.sh --all        # 프로젝트 레벨 전체
+./uninstall.sh                    # 대화형
+./uninstall.sh --all              # 프로젝트 레벨 전체
 ./uninstall.sh --global --all
 ./uninstall.sh --skill write-prd
 ./uninstall.sh --global --all --yes
@@ -126,37 +111,313 @@ chmod +x install.sh uninstall.sh
 
 ---
 
-## 📋 요구사항
-
-- macOS / Linux (bash 4+ 또는 zsh) — bash 스크립트 방식을 쓸 경우
-- [Claude Code CLI](https://claude.ai/code)
-
----
-
-## 🔄 SDLC 워크플로우
+## 🔄 SDLC 워크플로
 
 ```mermaid
 flowchart LR
     A[아이디어] -->|write-prd| B[PRD]
     B -->|write-techspec| C[TechSpec]
-    C -->|generate-issues-vertical<br/>또는 generate-issues-layered| D[이슈 목록]
+    C -->|generate-issues-vertical<br/>or generate-issues-layered| D[issues-*.md]
     D -->|register-issues-to-github| E[GitHub Issues]
-    E -->|github-kanban-skill| F[칸반 보드]
-    F -->|ci-cd-pipeline| G[CI/CD 파이프라인]
-    G -->|implement-top-issue| H[PR 생성]
-    H -->|implement-top-issue 반복| F
+    E -->|github-kanban-skill| F[Kanban Board]
+    F -->|ci-cd-pipeline| G[CI/CD Pipeline]
+    G -->|implement-top-issue| H[PR]
+    H -.머지·다음 이슈.-> F
 ```
+
+각 단계의 출력은 다음 단계의 입력이 됩니다. 한 번에 하나씩, 승인 후 다음으로 넘어가는 **Incremental Validation** 패턴을 따릅니다.
+
+---
+
+## 📘 스킬 상세 사용법
+
+각 스킬은 **자연어 트리거**(예: "PRD 만들어줘")나 **슬래시 커맨드**로 실행할 수 있습니다.
+
+---
+
+### 1️⃣ `write-prd` — PRD 작성
+
+**역할**: 시니어 PM 코치 역할로 아이디어를 PRD(Product Requirements Document)로 다듬습니다. Phase 0(아이디어 청취) → Phase 8(최종 저장)까지 8단계로 진행.
+
+**설계 원칙**: One at a time · Multiple choice first · YAGNI · Explore alternatives · Incremental validation
+
+**슬래시 커맨드**
+
+| 커맨드 | 설명 |
+|--------|------|
+| `/write-prd` | PRD 작성 세션 시작 |
+
+**트리거 예시**
+```
+PRD 만들어줘
+제품 기획서 써줘
+요구사항 문서 작성해줘
+```
+
+**산출물**: 프로젝트 루트에 `prd.md`
+
+---
+
+### 2️⃣ `write-techspec` — TechSpec 작성
+
+**역할**: PRD를 분석해 **TechSpec(Technical Specification)** 을 섹션별 승인 루프로 작성합니다.
+
+**다루는 섹션**: 아키텍처 패턴 · 기술 스택 · 데이터 모델 · API 명세 · 기능 명세 · UI 가이드 · 마일스톤
+
+**슬래시 커맨드**
+
+| 커맨드 | 설명 |
+|--------|------|
+| `/write-techspec` | PRD → TechSpec 작성 |
+
+**트리거 예시**
+```
+techspec 작성해줘
+PRD로 기술 명세서 만들어줘
+```
+
+**전제조건**: `prd.md` 존재
+**산출물**: `techspec.md`
+
+---
+
+### 3️⃣ `generate-issues-vertical` — 수직 슬라이스 이슈 생성
+
+**역할**: TechSpec을 **Walking Skeleton + Vertical Slice + CI/CD-first** 전략으로 분할. 기능 이슈 전에 CI 부트스트랩 → CD 스테이징을 먼저 배치하여 "초록불 파이프라인 위에서 굴러가는" 상태를 가장 빨리 만듭니다.
+
+**특징**
+- 각 슬라이스는 UI + API + DB + 테스트 + 배포를 End-to-End 포함
+- INVEST 6요건 충족
+- 모든 이슈에 `**Depends on**: #N` 의존성 + 위상 정렬 실행 순서 자동 생성
+
+**슬래시 커맨드**
+
+| 커맨드 | 설명 |
+|--------|------|
+| `/generate-issues-vertical` | 수직 분할 이슈 파일 생성 |
+| `/vertical-issues` | 축약 별칭 |
+
+**트리거 예시**
+```
+수직 슬라이스로 이슈 만들어줘
+Walking Skeleton 방식 이슈
+MVP 단위로 티켓 쪼개줘
+```
+
+**전제조건**: `techspec.md` 존재
+**산출물**: `issues-vertical.md` *(GitHub 등록은 별도 스킬)*
+
+---
+
+### 4️⃣ `generate-issues-layered` — 계층별 이슈 생성
+
+**역할**: TechSpec을 **아키텍처 계층(Layer) 순서 + CI/CD-first** 전략으로 분할. `Layer 0 (CI) → Layer 2 (CD 스켈레톤) → Layer 3 (DB) → … → Layer 9 (Prod 배포)` 순서로 이슈를 만듭니다.
+
+**3️⃣ vs 4️⃣ 선택 가이드**
+
+| 상황 | 추천 |
+|------|------|
+| 빠른 MVP · 사용자에게 보여줄 게 먼저 | **vertical** |
+| 팀이 레이어별로 나뉘어 있고 역할이 고정 | **layered** |
+| 교육/학습 목적으로 시스템 전체 구조 이해 | **layered** |
+
+> 📄 자세한 비교는 `references/issue-splitting-comparison.md` 참고
+
+**슬래시 커맨드**
+
+| 커맨드 | 설명 |
+|--------|------|
+| `/generate-issues-layered` | 계층별 이슈 파일 생성 |
+| `/layered-issues` | 축약 별칭 |
+
+**트리거 예시**
+```
+계층별로 이슈 쪼개줘
+DB→Backend→Frontend 순서로
+레이어별 분할
+```
+
+**전제조건**: `techspec.md` 존재
+**산출물**: `issues-layered.md`
+
+---
+
+### 5️⃣ `register-issues-to-github` — GitHub 이슈 일괄 등록
+
+**역할**: 로컬 이슈 마크다운 파일(`issues-vertical.md` / `issues-layered.md` / `cicd-issues.md` 등)을 읽어 GitHub 저장소에 일괄 등록합니다.
+
+**핵심 기능**
+- 제목·본문 파싱해 **레이블 자동 결정**
+- 저장소에 없는 레이블은 **표준 색상 팔레트로 자동 생성**
+- **중복 등록 방지** (기존 이슈 제목·메타 라인 대조)
+- `Depends on #N` 임시 번호를 **실제 이슈 번호로 치환**
+- 등록 성공 시 원본 파일에 `**GitHub Issue**: #N` in-place 추가
+- Dry-run 지원
+
+**슬래시 커맨드**
+
+| 커맨드 | 설명 |
+|--------|------|
+| `/register-issues-to-github` | 지정한 이슈 파일 등록 |
+| `/push-issues` / `/register-issues` | 축약 별칭 |
+
+**트리거 예시**
+```
+issues-vertical.md GitHub에 올려줘
+이슈 파일 등록해줘
+```
+
+**전제조건**
+- `issues-*.md` 파일 존재
+- `gh auth login` 또는 `KANBAN_TOKEN` 환경변수 설정
+
+---
+
+### 6️⃣ `github-kanban-skill` — GitHub Projects 칸반 보드
+
+**역할**: `gh` CLI + GraphQL로 **GitHub Projects(v2) 칸반 보드**를 자동 생성·구성하고 이슈를 우선순위대로 Todo 컬럼에 배치합니다.
+
+**기본 구성**
+- 컬럼: `Todo` / `In Progress` / `Review` / `Done`
+- 선택적 커스텀 필드: `Priority` / `Size` / `Sprint`
+- `order:NNN`, `mandatory-gate`, `profile:staging/prod` 레이블 인식
+- 파괴적 작업(보드 삭제 등) 전에 **opt-in(A/B/C/D)** 확인
+
+**슬래시 커맨드**
+
+| 커맨드 | 설명 |
+|--------|------|
+| `/kanban-create` | 새 프로젝트 보드 생성 |
+| `/kanban-add-issues` | 이슈를 Todo에 일괄 등록 |
+| `/kanban-from-final-issues` | `final-issues.md` 기반 정렬 배치 |
+| `/kanban-status` | 현재 보드 상태 요약 |
+| `/kanban-sync` | 이슈 상태 ↔ 보드 컬럼 동기화 |
+| `/kanban-teardown` | 보드 삭제 (확인 필수) |
+
+**트리거 예시**
+```
+칸반 보드 만들어줘
+GitHub 프로젝트 생성
+티켓 보드 설정
+```
+
+**토큰 설정 규칙 (필독)**
+- PAT 시크릿 이름은 **`KANBAN_TOKEN`** 으로 고정
+- 필요 스코프: `repo`, `project`, `read:org`, `read:discussion`
+- CI/CD·헤드리스 환경에서는 `KANBAN_TOKEN` 환경변수로 주입
+
+---
+
+### 7️⃣ `ci-cd-pipeline` — CI/CD 파이프라인 구현
+
+**역할**: `[CI]`/`[CD]`/`[Security]`/`[Infra]` 카테고리 이슈를 받아 **실제 워크플로 파일과 배포 파이프라인을 작성하고, 로컬 검증 → PR → 머지 → 실제 실행까지 완결**합니다.
+
+**산출물**
+- `.github/workflows/*.yml` · `.github/CODEOWNERS`
+- `Dockerfile*` · `fly.toml`/`render.yaml`/`vercel.json`
+- `deploy/**/*.sh` · PR 보호 규칙 · README 상태 배지
+- 스테이징/프로덕션 환경 실제 실행 결과
+
+**검증 체인**: `yamllint → actionlint → shellcheck → act` + 시크릿 화이트리스트 가드 + `gh run watch --exit-status` + 스테이징 smoke 실패 시 자동 롤백
+
+**슬래시 커맨드**
+
+| 커맨드 | 설명 |
+|--------|------|
+| `/ci-cd-pipeline --issue N` | 이슈 #N을 CI/CD로 구현 |
+| `/run-ci-cd --issue N` | 축약 별칭 |
+| `/implement-cicd-issue N` | `implement-top-issue`가 내부 위임 시 사용 |
+| `/ci-cd-pipeline --dry-run --issue N` | 계획만 출력 (STEP 8~10 스킵) |
+
+**트리거 예시**
+```
+CI/CD 파이프라인 구축해줘
+GitHub Actions 워크플로 작성
+스테이징/프로덕션 배포 자동화
+```
+
+> `implement-top-issue`가 CI/CD 성격의 이슈를 감지하면 이 스킬로 자동 위임합니다 (하이브리드 모드).
+
+---
+
+### 8️⃣ `implement-top-issue` — 최우선 이슈 자동 구현
+
+**역할**: GitHub Projects 보드에서 **가장 높은 우선순위의 이슈 1건**을 픽업하여 GitHub Flow에 따라 브랜치 생성 → 코드 구현(AC 기반) → 로컬 빌드/린트/테스트(단위·통합·E2E, UI는 Playwright) → PR 생성(`Closes #N`) → 보드 상태 전이까지 자동 수행합니다.
+
+**핵심 약속**
+- **한 번에 이슈 1건만** · 다중/병렬 금지
+- **이슈를 새로 만들지 않음** · 보드가 비었으면 선행 스킬 안내
+- **AC(Acceptance Criteria) 기반 구현** · AC 없으면 보강 요청
+- **CI/CD 이슈는 `ci-cd-pipeline`에 위임** (하이브리드 모드)
+- **결정론적 선택**: `(priority_score, board_index, issue_number)` 키로 1건 고정
+
+**우선순위 캐스케이드**: Priority 커스텀 필드(P0~P3) → `priority:p0~p3` 레이블 → 보드 표시 순서 → 이슈 번호
+
+**슬래시 커맨드**
+
+| 커맨드 | 설명 |
+|--------|------|
+| `/implement-top-issue` | 최우선 이슈 풀 사이클 |
+| `/implement-priority-issue` · `/pickup-issue` · `/work-next-issue` | 별칭 |
+
+**트리거 예시**
+```
+다음 이슈 구현해줘
+AI 개발자처럼 티켓 하나 끝내줘
+최우선 이슈 작업해줘
+```
+
+---
+
+## 🎯 엔드투엔드 예시 플로우
+
+```text
+1. /write-prd                                # 아이디어 → prd.md
+2. /write-techspec                           # prd.md → techspec.md
+3. /generate-issues-vertical                 # techspec.md → issues-vertical.md
+4. /register-issues-to-github                # GitHub Issues 일괄 등록
+5. /kanban-create                            # 칸반 보드 생성
+6. /kanban-from-final-issues                 # 이슈를 Todo에 순서대로 배치
+7. /implement-top-issue                      # 최우선 이슈 → PR (반복)
+```
+
+> `ci-cd-pipeline`은 보드 상 CI/CD 이슈에 도달했을 때 7번에서 자동 위임됩니다.
+
+---
+
+## 📋 요구사항
+
+- **Claude Code CLI**: https://claude.ai/code
+- **GitHub CLI**: `gh` (이슈 등록 · 칸반 · CI/CD 스킬 필수)
+- **PAT**: `KANBAN_TOKEN` (스코프: `repo`, `project`, `read:org`, `read:discussion`)
+- **Shell**: bash 4+ 또는 zsh (bash 설치 스크립트 사용 시)
+- **macOS / Linux**
 
 ---
 
 ## 🧑‍🏫 교육적 설계 원칙
 
-이 플러그인은 소프트웨어 공학 교육 맥락에서 다음을 중시합니다:
+이 플러그인은 소프트웨어 공학 교육 맥락에서 다음을 중시합니다.
 
-- **Separation of Concerns** — 각 스킬은 SDLC 한 단계만 담당
-- **Convention over Configuration** — Claude Code 공식 규약(`skills/` 자동 로드)을 그대로 따름
+- **Separation of Concerns** — 각 스킬은 SDLC 한 단계만 담당, 단일 책임
 - **Incremental Validation** — 단계별 산출물을 검토한 뒤 다음 단계로 진행
-- **CI/CD-first** — 기능 이슈 전에 파이프라인을 먼저 세워 "초록불 위에서 굴러가게"
+- **CI/CD-first** — 기능 이슈 전에 파이프라인을 먼저 세워 "초록불 위에서" 개발
+- **Convention over Configuration** — Claude Code 공식 규약(`skills/` 자동 로드)을 준수
+- **GitHub Flow** — 짧은 브랜치 + PR 리뷰 + 머지, 자동화 친화적
+
+---
+
+## 📂 참고 자료
+
+`references/` 폴더에 다음 템플릿과 분석 자료가 포함되어 있습니다.
+
+| 파일 | 용도 |
+|------|------|
+| `prd-template.md` | PRD 작성 시 구조 참조 |
+| `techspec-template.md` | TechSpec 섹션 구성 참조 |
+| `issue-splitting-comparison.md` | vertical vs layered 전략 비교 |
+| `issue-splitting-comparison.pdf` | 동일 내용 PDF 버전 |
+| `frontend-design.md` | 프론트엔드 설계 가이드 |
 
 ---
 
