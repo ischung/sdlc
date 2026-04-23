@@ -51,6 +51,9 @@ sdlc/
 
 두 가지 방법 중 선택하세요. **`/plugin` 명령**(방법 1)이 가장 간편하고 권장 방식입니다.
 
+> 📌 **최신 릴리스**: `v1.0.1` — 22개 슬래시 커맨드 엔트리 추가, homepage URL 교정.
+> 버전을 고정해서 설치하려면 **마켓플레이스 URL에 `#v1.0.1` 처럼 ref를 붙이세요** (아래 "특정 버전 설치" 참조).
+
 ### 방법 1 — Claude Code `/plugin` 명령 (권장)
 
 #### ① 사용자 전역 설치 (모든 프로젝트에서 사용)
@@ -94,12 +97,36 @@ sdlc/
 > 로컬 경로를 마켓플레이스로 등록할 수도 있습니다: `/plugin marketplace add /절대/경로/to/sdlc`
 > 단일 플러그인 직접 설치: `/plugin install /절대/경로/to/sdlc`
 
+#### ④ 특정 버전(태그) 고정 설치
+
+`/plugin install` 자체에는 버전 옵션이 없지만, **마켓플레이스 URL에 `#<ref>`를 붙이면** 해당 태그/브랜치로 pin됩니다. 아래는 `v1.0.1`로 고정하는 예시입니다.
+
+```text
+/plugin marketplace add https://github.com/ischung/sdlc.git#v1.0.1
+/plugin install sdlc-skill-pack@sdlc-marketplace
+```
+
+프로젝트 레벨 + 버전 pin:
+
+```text
+/plugin marketplace add https://github.com/ischung/sdlc.git#v1.0.1 --scope project
+/plugin install sdlc-skill-pack@sdlc-marketplace --scope project
+```
+
+> 이미 마켓플레이스를 등록해 두었다면 먼저 제거 후 재등록합니다: `/plugin marketplace remove sdlc-marketplace` → 위 명령 재실행.
+> 최신 버전으로 올라가려면 `#v...` 없이(=`main` 추적) 등록하거나, `#<새-태그>`로 재등록하세요.
+
 ### 방법 2 — bash 스크립트
 
 Claude Code가 없거나 셸에서 직접 설치·제거하고 싶을 때 사용합니다.
 
 ```bash
+# 최신 main 브랜치로 clone
 git clone https://github.com/ischung/sdlc.git sdlc-skill-pack
+
+# 특정 버전(태그)으로 clone
+git clone --branch v1.0.1 https://github.com/ischung/sdlc.git sdlc-skill-pack
+
 cd sdlc-skill-pack
 chmod +x install.sh uninstall.sh
 
@@ -108,6 +135,15 @@ chmod +x install.sh uninstall.sh
 ./install.sh --global --all        # 전역(~/.claude/skills/) 전체
 ./install.sh --skill write-prd     # 개별 설치
 ./install.sh --global --all --yes  # 확인 없이 자동 설치
+```
+
+이미 clone된 저장소에서 특정 버전으로 전환:
+
+```bash
+cd sdlc-skill-pack
+git fetch --tags
+git checkout v1.0.1
+./install.sh --all --yes
 ```
 
 bash 스크립트의 설치 위치:
