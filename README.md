@@ -23,6 +23,7 @@ sdlc/
 │   ├── github-kanban-skill/
 │   ├── ci-cd-pipeline/
 │   └── implement-top-issue/
+├── commands/                # 슬래시 커맨드 정의 (22개 · 스킬 호출 엔트리)
 ├── references/              # PRD/TechSpec 템플릿, 이슈 분할 전략 비교 자료
 ├── install.sh               # bash 설치 스크립트 (대체 경로)
 ├── uninstall.sh
@@ -163,7 +164,22 @@ flowchart LR
 
 ## 📘 스킬 상세 사용법
 
-각 스킬은 **자연어 트리거**(예: "PRD 만들어줘")나 **슬래시 커맨드**로 실행할 수 있습니다.
+각 스킬은 **자연어 트리거**(예: "PRD 만들어줘")나 **슬래시 커맨드**로 실행할 수 있습니다. 슬래시 커맨드는 플러그인 루트의 `commands/` 디렉토리에 등록되어 있어, 플러그인 설치 후 즉시 사용 가능합니다.
+
+### 전체 슬래시 커맨드 목록
+
+| 스킬 | 커맨드 |
+|------|--------|
+| `write-prd` | `/write-prd` |
+| `write-techspec` | `/write-techspec` |
+| `generate-issues-vertical` | `/generate-issues-vertical` · `/vertical-issues` |
+| `generate-issues-layered` | `/generate-issues-layered` · `/layered-issues` |
+| `register-issues-to-github` | `/register-issues-to-github` · `/push-issues` · `/register-issues` |
+| `github-kanban-skill` | `/kanban-create` · `/kanban-add-issues` · `/kanban-status` · `/kanban-from-final-issues` · `/kanban-sync` · `/kanban-teardown` |
+| `ci-cd-pipeline` | `/ci-cd-pipeline` · `/run-ci-cd` · `/implement-cicd-issue` |
+| `implement-top-issue` | `/implement-top-issue` · `/implement-priority-issue` · `/pickup-issue` · `/work-next-issue` |
+
+> 커맨드는 단순 별칭이 아니라 **Skill 도구를 호출하도록 작성된 프롬프트 엔트리**입니다. 인자를 받는 커맨드는 `argument-hint` 로 표시해두었으니 Claude Code UI에서 자동완성으로 확인할 수 있습니다.
 
 ---
 
