@@ -3,18 +3,25 @@ name: register-issues-to-github
 description: >
   로컬 이슈 마크다운 파일(issues.md / issues-layered.md / issues-vertical.md
   / cicd-issues.md / final-issues.md 등)을 읽어 GitHub 저장소에 이슈로
-  일괄 등록하는 스킬. 각 이슈의 제목·본문을 파싱하여 **적절한 레이블을
-  자동으로 결정**하고, 저장소에 해당 레이블이 존재하지 않으면 표준 색상
-  팔레트로 **자동 생성**한 뒤 부여한다. 중복 등록 방지(기존 이슈 타이틀·
-  메타 라인 대조), Depends on #N 임시 번호를 실제 번호로 치환, 등록
-  성공 시 원본 파일에 `**GitHub Issue**: #N` 메타를 in-place 로 추가,
-  실패 항목 집계, Dry-run 지원을 포함한다. KANBAN_TOKEN(또는 gh auth
-  login) 인증을 사용하며, 파괴적 작업 전에는 반드시 opt-in(A/B/C/D) 을
-  받는다. 사용자가 "이슈 등록", "GitHub에 이슈 올려줘", "이슈 파일
-  등록", "/register-issues-to-github", "/push-issues", "/register-issues",
-  "라벨 자동 생성해서 이슈 등록", "issues.md GitHub에 올려줘",
-  "final-issues.md 등록", "이슈 파일 → GitHub" 중 하나라도 언급하면
-  반드시 이 스킬을 사용할 것.
+  일괄 등록하고, **이어서 Projects v2 칸반 보드의 Todo 컬럼까지 반영**하는
+  "파일 → GitHub Issues → 칸반 보드" 원스톱 스킬 (v1.1). 각 이슈의
+  제목·본문을 파싱하여 **적절한 레이블을 자동으로 결정**하고, 저장소에
+  해당 레이블이 존재하지 않으면 표준 색상 팔레트로 **자동 생성**한 뒤
+  부여한다. 중복 등록 방지(기존 이슈 타이틀·메타 라인 대조), Depends on
+  #N 임시 번호를 실제 번호로 치환, 등록 성공 시 원본 파일에
+  `**GitHub Issue**: #N` 메타를 in-place 로 추가, 실패 항목 집계, Dry-run
+  지원을 포함한다. **STEP 9에서 github-kanban-skill 의 add-issues /
+  from-final-issues 로직을 호출**해 등록된 이슈를 보드 Todo 컬럼에
+  일괄 배치한다(강한 opt-in). 이 스킬의 존재 이유는 프로젝트의 "이슈
+  우선(Ticket-first) 원칙" — **이슈 없이 구현을 시작하면 안 되기 때문에**
+  이슈 파일·GitHub·보드 세 곳을 항상 같은 스냅샷으로 유지한다.
+  KANBAN_TOKEN(또는 gh auth login) 인증을 사용하며, 파괴적 작업 전에는
+  반드시 opt-in(A/B/C/D) 을 받는다. 사용자가 "이슈 등록",
+  "GitHub에 이슈 올려줘", "이슈 파일 등록", "/register-issues-to-github",
+  "/push-issues", "/register-issues", "라벨 자동 생성해서 이슈 등록",
+  "issues.md GitHub에 올려줘", "final-issues.md 등록", "이슈 파일
+  → GitHub", "보드에 이슈 올려줘", "파일에 있는 이슈 보드에 등록" 중
+  하나라도 언급하면 반드시 이 스킬을 사용할 것.
 ---
 
 # 이슈 파일 → GitHub 등록 스킬 v1.0
@@ -36,6 +43,10 @@ description: >
 **이 스킬은 이슈를 "새로 만들지 않는다"** — 입력 파일(마크다운)이
 전제다. 파일이 없으면 `generate-issues-layered` /
 `generate-issues-vertical` / `ci-cd-pipeline` 실행을 먼저 안내한다.
+프로젝트 도중 발생한 버그/기능을 파일에 추가하려면 `append-issue`
+스킬을 사용한다. 본 스킬은 **한 번 실행에 파일 → GitHub Issues →
+칸반 보드 Todo** 까지 한 세트로 반영하여, 구현 스킬이 보드에서만
+작업 대상을 픽업할 수 있게 "이슈 우선(Ticket-first) 원칙" 을 지킨다.
 
 ---
 
@@ -405,8 +416,104 @@ done
   • …
 
 ⏭️ 다음 단계
-  • 칸반 보드로 관리: github-kanban 스킬 → /kanban-from-final-issues
-  • 이슈 상태 ↔ PR 동기화: /kanban-sync
+  • STEP 9 진입 — 방금 등록한 이슈들을 칸반 보드 Todo 컬럼에 배치
+  • (보드가 아직 없다면) /kanban-create 로 먼저 보드를 만들어야 함
+  • 이슈 상태 ↔ PR 동기화는 나중에 /kanban-sync 로 수행
+```
+
+---
+
+## STEP 9 — 칸반 보드 반영 (이슈 우선 원칙 자동 완결)
+
+> **이 스킬의 본질**: 파일 → GitHub Issues → **칸반 보드** 세 곳의 상태를
+> 항상 같은 스냅샷으로 만드는 것이다. 이슈 생성만 하고 보드에 올리지
+> 않으면 `implement-top-issue` 같은 구현 스킬이 **보드를 읽어** 작업을
+> 고르기 때문에 "등록은 됐지만 작업자 눈에 안 보이는" 사각지대가
+> 생긴다. 따라서 STEP 9는 **선택이 아닌 기본값**으로 실행된다.
+
+### 9.1 보드 존재 확인 & 선택
+
+```bash
+# 기존 보드 후보 출력
+gh project list --owner "$OWNER" --format json \
+  | jq -r '.projects[] | "#\(.number)  \(.title)"'
+```
+
+다음 중 하나로 분기한다.
+
+| 상황 | 동작 |
+| :---- | :---- |
+| 보드가 하나뿐 | 해당 보드를 기본 후보로 제안하고 Y/N 확인 |
+| 여러 개 존재 | A/B/C/… 선택지로 단 하나 선택 |
+| 하나도 없음 | "먼저 `/kanban-create` 로 보드를 만들어야 합니다." 안내 후 사용자가 만들 때까지 대기하거나, `github-kanban-skill` 의 kanban-create 흐름을 **그 자리에서 이어서** 수행할지 opt-in |
+
+### 9.2 반영 모드 선택 (opt-in)
+
+```text
+등록된 이슈들을 칸반 보드에 반영하는 방식을 선택하세요:
+
+  A) /kanban-from-final-issues 호환 배치 ⭐ 권장
+     - final-issues.md 에서 order:NNN 순서를 우선하고, 없으면 파일
+       등장 순서 그대로 Todo 컬럼 상단부터 쌓는다.
+     - mandatory-gate 레이블은 Priority=P0 자동 설정.
+  B) /kanban-add-issues 단순 추가
+     - 순서 없이 모두 Todo 에 추가 (중복 제외).
+  C) 건너뛰기 (비권장)
+     - GitHub Issue 만 만들고 보드에는 올리지 않는다.
+       ⚠️ 이 선택을 하면 이번 세션 동안 implement-top-issue / pickup-issue
+          가 이 이슈들을 픽업하지 못한다. 재실행하려면
+          `/kanban-from-final-issues` 를 수동으로 돌려야 한다.
+  D) 취소
+```
+
+`A` 또는 `B` 선택 시 `github-kanban-skill` 의 해당 서브플로우를 그대로
+실행한다(별도 프로세스 호출이 아니라 **같은 세션에서 Skill 로 이어감**).
+
+### 9.3 반영 실행
+
+```bash
+# A 선택
+PROJECT_NUMBER=<사용자 선택>
+# github-kanban-skill 의 kanban-from-final-issues 플로우 진입
+#   - SRC 변수를 STEP 1 에서 선택된 파일 경로로 상속
+#   - CI_TO_REAL 매핑으로 새로 만든 번호를 우선 사용
+#   - mandatory-gate / profile:<ID> / order:NNN 레이블 반영
+```
+
+```bash
+# B 선택
+for N in "${!CI_TO_REAL[@]}"; do
+  REAL="${CI_TO_REAL[$N]}"
+  gh project item-add "$PROJECT_NUMBER" --owner "$OWNER" \
+    --url "https://github.com/$REPO_FULL/issues/$REAL" >/dev/null
+done
+```
+
+### 9.4 반영 결과 요약 (STEP 8 확장)
+
+최종 보고에 보드 반영 결과를 덧붙인다.
+
+```text
+📊 칸반 보드 반영
+  • 보드        : #7  Sprint 2026-04
+  • 추가된 카드 : 19  (중복 제외 2)
+  • 우선순위 P0 자동 설정: 3  (mandatory-gate)
+  • 순서 권위   : final-issues.md 파일 순서 + order:NNN 정렬
+  • 보드 URL    : https://github.com/users/<owner>/projects/7
+```
+
+### 9.5 스킵(C 선택) 시의 경고 로그
+
+`C` 를 선택하면 다음을 이슈 파일의 **맨 위 HTML 주석**에 남겨 추적성을
+유지한다. 같은 파일로 재실행할 때 이 경고를 감지하면 "보드 반영이 아직
+안 됐습니다. 지금 할까요?" 를 다시 묻는다.
+
+```markdown
+<!--
+register-issues-to-github: STEP 9 스킵 (C 선택) — 2026-04-24T10:05:42+09:00
+미반영 이슈: #42, #43, #44, ...
+보드 반영 재시도: /kanban-from-final-issues  또는  /register-issues 재실행 시 STEP 9 만 돌리기
+-->
 ```
 
 ---
@@ -454,10 +561,30 @@ done
 
 ## 선행·후속 스킬 연계
 
+이 스킬은 SDLC 의 **"이슈 우선(Ticket-first) 원칙"** 을 코드로 강제하는
+허브다. 구현 스킬들은 GitHub Issue / 칸반 보드의 존재를 전제로
+작동하므로, 파일에만 있는 이슈는 사실상 "존재하지 않는 이슈"다.
+
+```
+[이슈 소스]                               [이 스킬]                    [구현]
+write-prd → write-techspec            ┐
+generate-issues-vertical               │
+generate-issues-layered                ├─→ register-issues-to-github ─→ implement-top-issue
+ci-cd-pipeline (final-issues.md)       │    ├─ STEP 1~8: 파일 → GitHub    /pickup-issue
+append-issue  (런타임 신규 이슈)        ┘    └─ STEP 9:   GitHub → 보드    /work-next-issue
+                                                                          (반드시 이슈 번호 메타가 있어야 픽업됨)
+```
+
 - **선행**: `generate-issues-layered` / `generate-issues-vertical` /
-  `ci-cd-pipeline` 중 하나로 생성된 이슈 파일.
-- **후속**: `github-kanban` 으로 등록된 이슈를 Projects(v2) 칸반에 배치
-  (`/kanban-from-final-issues` 권장).
+  `ci-cd-pipeline` / `append-issue` 중 하나로 생성되었거나 추가된 이슈
+  파일. 프로젝트 도중 생긴 버그·기능은 반드시 `append-issue` 로 파일에
+  먼저 반영한 뒤 이 스킬을 호출한다.
+- **내장 후속 (STEP 9)**: `github-kanban-skill` 의 add-issues /
+  from-final-issues 플로우. 본 스킬이 같은 세션에서 이어서 수행한다.
+- **구현 스킬**: `implement-top-issue` 및 그 별칭
+  (`pickup-issue` / `work-next-issue` / `implement-priority-issue`) 은
+  이 스킬이 남긴 `**GitHub Issue**: #N` 메타가 있는 이슈 블록만 유효한
+  대상으로 본다. 메타가 없으면 구현을 거부하고 본 스킬 실행을 안내한다.
 
 ---
 
