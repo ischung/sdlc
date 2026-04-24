@@ -19,11 +19,12 @@ sdlc/
 │   ├── write-techspec/
 │   ├── generate-issues-vertical/
 │   ├── generate-issues-layered/
+│   ├── append-issue/            # v1.2.0+ 런타임 이슈 추가
 │   ├── register-issues-to-github/
 │   ├── github-kanban-skill/
 │   ├── ci-cd-pipeline/
 │   └── implement-top-issue/
-├── commands/                # 슬래시 커맨드 정의 (22개 · 스킬 호출 엔트리)
+├── commands/                # 슬래시 커맨드 정의 (25개 · 스킬 호출 엔트리)
 ├── hooks/                   # Claude Code 라이프사이클 훅 (gh issue create → 칸반 자동 추가)
 │   ├── hooks.json
 │   └── add-new-issue-to-kanban.sh
@@ -61,8 +62,8 @@ sdlc/
 
 두 가지 방법 중 선택하세요. **`/plugin` 명령**(방법 1)이 가장 간편하고 권장 방식입니다.
 
-> 📌 **최신 릴리스**: `v1.1.0` — `gh issue create` 후 이슈를 칸반 보드에 **자동 추가**하는 PostToolUse 훅 추가.
-> 버전을 고정해서 설치하려면 **마켓플레이스 URL에 `#v1.1.0` 처럼 ref를 붙이세요** (아래 "특정 버전 설치" 참조).
+> 📌 **최신 릴리스**: `v1.2.0` — 이슈 우선(Ticket-first) 원칙을 **도구 레벨에서 강제**. 런타임 이슈 추가용 `append-issue` 스킬 신설, `register-issues-to-github` 가 칸반 보드 반영(STEP 9)까지 한 번에 수행, `implement-top-issue` 에 STEP -1 가드 추가로 "이슈 없이 구현 시작" 차단.
+> 버전을 고정해서 설치하려면 **마켓플레이스 URL에 `#v1.2.0` 처럼 ref를 붙이세요** (아래 "특정 버전 설치" 참조).
 
 ### 방법 1 — Claude Code `/plugin` 명령 (권장)
 
@@ -109,17 +110,17 @@ sdlc/
 
 #### ④ 특정 버전(태그) 고정 설치
 
-`/plugin install` 자체에는 버전 옵션이 없지만, **마켓플레이스 URL에 `#<ref>`를 붙이면** 해당 태그/브랜치로 pin됩니다. 아래는 `v1.0.1`로 고정하는 예시입니다.
+`/plugin install` 자체에는 버전 옵션이 없지만, **마켓플레이스 URL에 `#<ref>`를 붙이면** 해당 태그/브랜치로 pin됩니다. 아래는 최신 `v1.2.0`으로 고정하는 예시입니다.
 
 ```text
-/plugin marketplace add https://github.com/ischung/sdlc.git#v1.0.1
+/plugin marketplace add https://github.com/ischung/sdlc.git#v1.2.0
 /plugin install sdlc-skill-pack@sdlc-marketplace
 ```
 
 프로젝트 레벨 + 버전 pin:
 
 ```text
-/plugin marketplace add https://github.com/ischung/sdlc.git#v1.0.1 --scope project
+/plugin marketplace add https://github.com/ischung/sdlc.git#v1.2.0 --scope project
 /plugin install sdlc-skill-pack@sdlc-marketplace --scope project
 ```
 
@@ -135,7 +136,7 @@ Claude Code가 없거나 셸에서 직접 설치·제거하고 싶을 때 사용
 git clone https://github.com/ischung/sdlc.git sdlc-skill-pack
 
 # 특정 버전(태그)으로 clone
-git clone --branch v1.0.1 https://github.com/ischung/sdlc.git sdlc-skill-pack
+git clone --branch v1.2.0 https://github.com/ischung/sdlc.git sdlc-skill-pack
 
 cd sdlc-skill-pack
 chmod +x install.sh uninstall.sh
@@ -152,7 +153,7 @@ chmod +x install.sh uninstall.sh
 ```bash
 cd sdlc-skill-pack
 git fetch --tags
-git checkout v1.0.1
+git checkout v1.2.0
 ./install.sh --all --yes
 ```
 
