@@ -67,7 +67,9 @@ sdlc/
 
 ### 방법 1 — Claude Code `/plugin` 명령 (권장)
 
-> ⚠️ **HTTPS URL을 명시적으로 사용하세요.** `ischung/sdlc` 같은 축약형은 SSH(`git@github.com:...`)로 확장되어 SSH 키가 없으면 `Permission denied (publickey)` 로 실패합니다. 아래 예시처럼 `https://github.com/ischung/sdlc` 형태로 풀 URL을 넘기는 것이 가장 안전합니다.
+> ⚠️ **두 가지 주의사항**
+> 1. **HTTPS URL을 명시적으로 사용하세요.** `ischung/sdlc` 같은 축약형은 SSH(`git@github.com:...`)로 확장되어 SSH 키가 없으면 `Permission denied (publickey)` 로 실패합니다.
+> 2. **`/plugin marketplace add` 에는 `--scope` 플래그를 붙이지 마세요.** 현재 슬래시 커맨드 파서가 인자를 URL에 이어붙여 `Malformed URL` 오류를 냅니다. scope 는 `/plugin install` 단계에서만 지정합니다 (마켓플레이스는 어차피 머신 전역에 한 번만 받으면 됩니다).
 
 #### ① 사용자 전역 설치 (모든 프로젝트에서 사용)
 
@@ -78,10 +80,10 @@ sdlc/
 
 #### ② 프로젝트 레벨 설치 (현재 프로젝트에만 적용)
 
-`--scope project` 플래그로 지정합니다. `.claude/settings.json`에 기록되어 **git 커밋하면 팀원과 자동 공유**됩니다.
+마켓플레이스는 그대로 등록하고, **`/plugin install` 단계에서만 `--scope project`** 를 붙입니다. `.claude/settings.json`에 기록되어 **git 커밋하면 팀원과 자동 공유**됩니다.
 
 ```text
-/plugin marketplace add https://github.com/ischung/sdlc --scope project
+/plugin marketplace add https://github.com/ischung/sdlc
 /plugin install sdlc-skill-pack@sdlc-marketplace --scope project
 ```
 
@@ -119,10 +121,10 @@ sdlc/
 /plugin install sdlc-skill-pack@sdlc-marketplace
 ```
 
-프로젝트 레벨 + 버전 pin:
+프로젝트 레벨 + 버전 pin (다시 강조: `marketplace add` 에는 `--scope` 를 붙이지 않습니다):
 
 ```text
-/plugin marketplace add https://github.com/ischung/sdlc.git#v1.2.0 --scope project
+/plugin marketplace add https://github.com/ischung/sdlc.git#v1.2.0
 /plugin install sdlc-skill-pack@sdlc-marketplace --scope project
 ```
 
